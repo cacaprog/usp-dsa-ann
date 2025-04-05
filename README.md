@@ -231,3 +231,193 @@ Decodificador
 
 O que é mais rápido para descobrir uma informação: ler o livro inteiro ou procurar no índice?
 Os transformers criam estes índices
+
+# Deep Learning III
+
+### Deep Learning não supervisionado
+
+**Modelos baseados em energia**
+
+### Máquinas de Boltzmann
+- É uma FNN de uma camada
+- Objetivo: aprender a distribuição de probabilidades dos inputs
+- ajustar pesos para ser possível reconstruir os inputs (entradas)
+- Máquina restrita de Boltzmann
+- Ajuda a classificar as features (já que não temos target)
+- Se reconstroi bem, você classifica bem
+
+![alt text](image.png)
+
+**Aprendizado pela divergência constrastiva**
+- Compara o valor reconstruído com o valor real
+- Diferença entre entrada e `r` é verificada pela divergência de Kullback-Leibler
+
+Aplicações Máquina de Boltzmann
+- Redução de dimensionalidade
+- Sistema de recomendação
+- Reconstrução de imagem
+
+Caso Netflix
+- Recomendação baseada em conteúdo - filmes parecidos
+- Recomendação baseada em filtragem colaborativa - perfis semelhantes
+
+### DBN - Deep Belief Networks
+ou Rede de Crenças Profundas é um tipo de modelo de aprendizado profundo que combune redes neurais com técnicas de aprendizado não supervisionado. Elas foram pioneiras no desenvolvimento de arquiteturas profundas e são compostas por várias Restricted Boltzmann Machines (RBMs) ou Autoencoders empilhados.
+
+
+### Autoencoder
+- Reconstrução de input
+- Redução de dimensionalidade
+- Autoencoder é como um gargalo, um funil
+
+Um Autoencoder (ou Autoencodador) é uma rede neural não supervisionada usada para aprendizado de representações eficientes de dados. Ele é projetado para comprimir (codificar) os dados em uma representação compacta e depois reconstruir (decodificar) essa representação de volta a algo o mais próximo possível do dado original.
+
+É como um sistema de "compactação e descompactação" aprendido a partir dos dados, sem a necessidade de rótulos.
+
+https://miro.medium.com/v2/resize:fit:1400/1*44eDEuZBEsmG_TCAKRI3Kw@2x.png
+
+encode > code > decode
+
+**Estrutura Básica**
+
+- Encoder (Codificador):
+    - Reduz a dimensionalidade dos dados de entrada, transformando-os em uma representação latente (ou embedding).
+    - Exemplo: Se a entrada tem 1000 dimensões, o encoder pode comprimi-la para 50.
+
+- Bottleneck (Gargalo):
+    - Camada intermediária que armazena a representação compactada dos dados.
+    - É a parte mais importante, pois força a rede a aprender apenas as características mais relevantes.
+
+- Decoder (Decodificador):
+    - Reconstrói os dados originais a partir da representação latente.
+    - Tenta gerar uma saída o mais parecida possível com a entrada.
+
+
+**Processo:**
+- O encoder comprime o dado de entrada em um espaço latente.
+- O decoder tenta reconstruir o dado original a partir desse espaço.
+- A rede ajusta seus pesos para reduzir o erro de reconstrução.
+
+
+**Tipos de Autoencoders**
+
+- Undercomplete Autoencoder
+    - O gargalo tem dimensão menor que a entrada (para extrair características essenciais).
+
+- Denoising Autoencoder
+    - Recebe uma versão corrompida (com ruído) da entrada e tenta reconstruir a versão limpa.
+    - Ajuda a aprender representações robustas.
+
+![alt text](image-1.png)
+
+- Sparse Autoencoder
+    - Introduz restrições de esparsidade no espaço latente (ativações raras).
+    - Útil para aprendizado de características mais distintas.
+    - Aplica-se termo de regularização
+
+- Variational Autoencoder (VAE)
+    - Usado para geração de dados.
+    - O espaço latente segue uma distribuição probabilística (normalmente Gaussiana).
+
+- Convolutional Autoencoder
+    - Usa camadas convolucionais para dados de imagem.
+    - Melhor para aprender padrões espaciais.
+
+**Aplicações**
+- Redução de Dimensionalidade (como alternativa ao PCA).
+- Remoção de Ruído (Denoising).
+- Detecção de Anomalias (dados com padrões incomuns têm alta perda de reconstrução).
+- Geração de Dados (especialmente VAEs).
+- Sistemas de Recomendação (aprendizado de embeddings).
+
+
+```python
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+
+# Dados de entrada (ex: 784 pixels para MNIST)
+input_dim = 784
+encoding_dim = 32  # Dimensão do gargalo
+
+# Encoder
+input_layer = Input(shape=(input_dim,))
+encoded = Dense(encoding_dim, activation='relu')(input_layer)
+
+# Decoder
+decoded = Dense(input_dim, activation='sigmoid')(encoded)
+
+# Modelo Autoencoder
+autoencoder = Model(input_layer, decoded)
+autoencoder.compile(optimizer='adam', loss='mse')
+
+# Treinamento (X_train é a entrada e o target ao mesmo tempo)
+autoencoder.fit(X_train, X_train, epochs=50, batch_size=256)
+```
+
+
+## GAN - redes adversárias generativas
+
+> Duas redes neurais entram em um bar... uma tenta enganar a outra, e o resultado é arte!
+
+- a ideia mais interessante nos últimos 10 anos em Machine Learning
+- duas redes competindo
+- modelo generativo
+- modelos discriminativos aprendem a fronteira entre classes (cachorro ou bolinhos)
+
+Uma GAN é um sistema composto por duas redes neurais rivais:
+- Gerador (Generator) → Cria dados falsos (ex: imagens).
+- Discriminador (Discriminator) → Tenta detectar se os dados são reais ou falsos.
+
+Elas competem em um jogo de gato e rato: o Gerador tanta enganar o Discriminador, enquanto o Discriminador tenta ficar cada vez melhor em detectar fraudes. Com o tempo, o Gerador se torna tão bom que produz dados indistinguíveis dos reais!
+
+
+| Nome	| Descrição	| Exemplo de Uso |
+| --- | --- | --- |
+| Vanilla GAN	| A primeira proposta (2014, Ian Goodfellow).	| Geração simples de imagens. |
+| DCGAN	| Usa redes convolucionais para imagens mais realistas.	|Rostos de celebridades falsas.|
+| CycleGAN	| Transforma imagens de um domínio para outro sem pares supervisionados.	| Transformar cavalos em zebras.|
+| StyleGAN	| Gera rostos hiper-realistas com controle fino (NVIDIA).	| ThisPersonDoesNotExist.com |
+| WGAN	| Melhora a estabilidade do treinamento.	| Geração mais consistente.|
+
+
+
+```python
+from tensorflow.keras.layers import Dense, LeakyReLU, BatchNormalization
+from tensorflow.keras.models import Sequential
+
+# Gerador (transforma ruído em imagem)
+generator = Sequential([
+    Dense(256, input_dim=100), LeakyReLU(0.2), BatchNormalization(),
+    Dense(512), LeakyReLU(0.2), BatchNormalization(),
+    Dense(784, activation='tanh')  # Saída no formato de imagem 28x28
+])
+
+# Discriminador (classifica real vs. fake)
+discriminator = Sequential([
+    Dense(512, input_dim=784), LeakyReLU(0.2),
+    Dense(256), LeakyReLU(0.2),
+    Dense(1, activation='sigmoid')  # Probabilidade de ser real
+])
+
+# Combina as duas redes
+gan = Sequential([generator, discriminator])
+discriminator.compile(loss='binary_crossentropy', optimizer='adam')
+discriminator.trainable = False  # Congela o discriminador no treino do gerador
+gan.compile(loss='binary_crossentropy', optimizer='adam')
+
+# Treinamento (loop adversarial)
+for epoch in range(epochs):
+    noise = np.random.normal(0, 1, (batch_size, 100))
+    fake_images = generator.predict(noise)
+    real_images = X_train[np.random.randint(0, X_train.shape[0], batch_size)]
+    
+    # Treina o discriminador
+    d_loss_real = discriminator.train_on_batch(real_images, np.ones((batch_size, 1)))
+    d_loss_fake = discriminator.train_on_batch(fake_images, np.zeros((batch_size, 1)))
+    d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+    
+    # Treina o gerador (para enganar o discriminador)
+    noise = np.random.normal(0, 1, (batch_size, 100))
+    g_loss = gan.train_on_batch(noise, np.ones((batch_size, 1)))
+```
+
